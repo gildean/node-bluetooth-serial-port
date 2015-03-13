@@ -84,7 +84,7 @@ void BTSerialPortBinding::EIO_AfterConnect(uv_work_t *req) {
             NanError("Cannot connect")
         };
 
-        baton->ecb->Call(1, argv);
+        baton->cb->Call(1, argv);
     }
 
     if (try_catch.HasCaught()) {
@@ -93,7 +93,6 @@ void BTSerialPortBinding::EIO_AfterConnect(uv_work_t *req) {
 
     baton->rfcomm->Unref();
     delete baton->cb;
-    delete baton->ecb;
     delete baton;
     baton = NULL;
 }
@@ -223,7 +222,7 @@ void BTSerialPortBinding::Init(Handle<Object> target) {
 
     NODE_SET_PROTOTYPE_METHOD(t, "write", Write);
     NODE_SET_PROTOTYPE_METHOD(t, "read", Read);
-    NODE_SET_PROTOTYPE_METHOD(t, "close", Close);
+    NODE_SET_PROTOTYPE_METHOD(t, "disconnect", Close);
     target->Set(NanNew("BTSerialPortBinding"), t->GetFunction());
     target->Set(NanNew("BTSerialPortBinding"), t->GetFunction());
     target->Set(NanNew("BTSerialPortBinding"), t->GetFunction());
@@ -243,20 +242,16 @@ NAN_METHOD(BTSerialPortBinding::New) {
     uv_mutex_init(&write_queue_mutex);
     ngx_queue_init(&write_queue);
 
-    const char *usage = "usage: BTSerialPortBinding(address, channelID, callback, error)";
-    if (args.Length() != 4) {
+    const char *usage = "usage: BTSerialPortBinding(address, channelID, callback)";
+    if (args.Length() != 3) {
         NanThrowError(usage);
     }
 
     String::Utf8Value address(args[0]);
-
     int channelID = args[1]->Int32Value(); 
     if (channelID <= 0) { 
         NanThrowTypeError("ChannelID should be a positive int value.");
     }
-
-    Local<Function> cb = Local<Function>::Cast(args[2]);
-    Local<Function> ecb = Local<Function>::Cast(args[3]);
 
     BTSerialPortBinding* rfcomm = new BTSerialPortBinding();
     rfcomm->Wrap(args.This());
@@ -270,12 +265,12 @@ NAN_METHOD(BTSerialPortBinding::New) {
         NanThrowError("Cannot create pipe for reading.");
     }
 
+    Local<Function> callback = args[2].As<Function>();
     int flags = fcntl(baton->rfcomm->rep[0], F_GETFL, 0);
     fcntl(baton->rfcomm->rep[0], F_SETFL, flags | O_NONBLOCK);
 
     strcpy(baton->address, *address);
-    baton->cb = new NanCallback(args[2].As<Function>());
-    baton->ecb = new NanCallback(args[3].As<Function>());
+    baton->cb = new NanCallback(callback);
     baton->request.data = baton;
     baton->rfcomm->Ref();
 
@@ -288,8 +283,12 @@ NAN_METHOD(BTSerialPortBinding::Write) {
     NanScope();
 
     // usage
-    if (args.Length() != 3) {
-        NanThrowError("usage: write(buf, address, callback)");
+    //if (args.Length() != 3) {
+    //    NanThrowError("usage: write(buf, address, callback)");
+    //}
+
+    if (args.Length() != 2) {
+        NanThrowError("usage: write(buf, callback)");
     }
 
     // buffer
@@ -302,14 +301,14 @@ NAN_METHOD(BTSerialPortBinding::Write) {
     size_t bufferLength = Buffer::Length(bufferObject);
 
     // string
-    if (!args[1]->IsString()) {
-        NanThrowTypeError("Second argument must be a string");
-    }
+    //if (!args[1]->IsString()) {
+    //    NanThrowTypeError("Second argument must be a string");
+    //}
     //NOTE: The address argument is currently only used in OSX.
     //      On linux each connection is handled by a separate object.
 
     // callback
-    if(!args[2]->IsFunction()) {
+    if(!args[1]->IsFunction()) {
         NanThrowTypeError("Third argument must be a function");
     }
 
@@ -320,7 +319,7 @@ NAN_METHOD(BTSerialPortBinding::Write) {
     NanAssignPersistent(baton->buffer, bufferObject);
     baton->bufferData = bufferData;
     baton->bufferLength = bufferLength;
-    baton->callback = new NanCallback(args[2].As<Function>());
+    baton->callback = new NanCallback(args[1].As<Function>());
 
     queued_write_t *queuedWrite = new queued_write_t();
     memset(queuedWrite, 0, sizeof(queued_write_t));
@@ -343,8 +342,8 @@ NAN_METHOD(BTSerialPortBinding::Write) {
 NAN_METHOD(BTSerialPortBinding::Close) {
     NanScope();
 
-    const char *usage = "usage: close(address)";
-    if (args.Length() != 1) {
+    const char *usage = "usage: close()";
+    if (args.Length() != 0) {
         NanThrowError(usage);
     }
 

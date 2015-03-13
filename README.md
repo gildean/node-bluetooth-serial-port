@@ -190,15 +190,14 @@ Checks if a device has a serial port service running and if it is found it passe
 * callback(channel) - called when finished looking for a serial port on the device.
 * errorCallback - called the search finished but no serial port channel was found on the device.
 
-#### BluetoothSerialPort.connect(bluetoothAddress[, successCallback, errorCallback])
+#### BluetoothSerialPort.connect(bluetoothAddress, callback)
 
 Connects to a remote bluetooth device.
 
 * bluetoothAddress - the address of the remote Bluetooth device.
-* [successCallback] - called when a connection has been established.
-* [errorCallback(err)] - called when the connection attempt results in an error. The parameter is an [Error object](http://docs.nodejitsu.com/articles/errors/what-is-the-error-object).
+* [successCallback(err)] - called when a connection has been established, or an error occurred
 
-#### BluetoothSerialPort.close()
+#### BluetoothSerialPort.disconnect()
 
 Closes the connection.
 
@@ -223,4 +222,4 @@ Lists the devices that are currently paired with the host.
 
 ## LICENSE
 
-This module is available under a [FreeBSD license](http://opensource.org/licenses/BSD-2-Clause), see the [LICENSE file](https://github.com/eelcocramer/node-bluetooth-serial-port/blob/master/LICENSE.md) for details.
+This module is available under a [FreeBSD license](http://opensource.org/licenses/BSD-2-Clause), see the [LICENSE file](https://github.com/eelcocramer/node-bluetooth-serial-port/blob/master/LICENSE.md) for details and other licenses that might apply.

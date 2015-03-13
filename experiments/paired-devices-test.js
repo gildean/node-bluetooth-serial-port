@@ -2,8 +2,7 @@
     "use strict";
 
     var util = require('util');
-    var DeviceINQ = require("../lib/device-inquiry.js").DeviceINQ;
-    var BluetoothSerialPort = require("../lib/bluetooth-serial-port.js").BluetoothSerialPort;
+    var BluetoothSerialPort = require("../lib/bluetooth-serial-port.js");
     var serial = new BluetoothSerialPort();
 
     serial.listPairedDevices(function(pairedDevices) {
