@@ -161,12 +161,10 @@ void BTSerialPortBinding::EIO_Read(uv_work_t *req) {
 
     int nfds = (baton->rfcomm->s > baton->rfcomm->rep[0]) ? baton->rfcomm->s : baton->rfcomm->rep[0];
 
+    baton->size = 0;
     if (pselect(nfds + 1, &set, NULL, NULL, NULL, NULL) >= 0) {
         if (FD_ISSET(baton->rfcomm->s, &set)) {
             baton->size = read(baton->rfcomm->s, buf, sizeof(buf));
-        } else {
-            // when no data is read from rfcomm the connection has been closed.
-            baton->size = 0;
         }
 
         // determine if we read anything that we can copy.

@@ -10,7 +10,7 @@ serial.on('found', function (address, name) {
         if (err) return console.error(err);
         console.log('Found RFCOMM channel for serial port on ' + name + ': ' + channel);
 
-        if (name !== 'linvor') return;
+        //if (name !== 'linvor') return;
 
         console.log('Attempting to connect...');
         serial.connect(address, channel, function (err) {
@@ -36,5 +36,5 @@ serial.on('found', function (address, name) {
     console.log('there was an error with the serial', err);
 }).once('finished', function () {
     console.log('scan finished');
-    setImmediate(function () { serial.disconnect() });
+    //setImmediate(function () { serial.disconnect() });
 }).inquire();
